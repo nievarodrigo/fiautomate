@@ -1,6 +1,5 @@
 from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.models.base import Base, engine
 from app.api.routes import router
@@ -20,6 +19,13 @@ app = FastAPI(
     description="Sistema de gestión de fiados con integración MercadoPago y WhatsApp",
     version="1.0.0",
     lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(router)

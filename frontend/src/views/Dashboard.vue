@@ -27,6 +27,15 @@
         />
       </div>
     </template>
+
+    <!-- Botón flotante -->
+    <button class="fab" @click="mostrarForm = true">+</button>
+
+    <FormModal
+      v-if="mostrarForm"
+      @close="mostrarForm = false"
+      @guardado="onGuardado"
+    />
   </div>
 </template>
 
@@ -36,11 +45,13 @@ import { api } from '../services/api'
 import TopBar from '../components/TopBar.vue'
 import ResumenStats from '../components/ResumenStats.vue'
 import ClienteCard from '../components/ClienteCard.vue'
+import FormModal from '../components/FormModal.vue'
 
 const emit = defineEmits(['ver-cliente'])
 const resumen = ref({ clientes: [], total_general: 0, cantidad_clientes: 0 })
 const cargando = ref(true)
 const error = ref(false)
+const mostrarForm = ref(false)
 
 async function cargar() {
   cargando.value = true
@@ -56,6 +67,10 @@ async function cargar() {
 
 function verCliente(nombre) {
   emit('ver-cliente', nombre)
+}
+
+function onGuardado() {
+  cargar()
 }
 
 onMounted(cargar)
@@ -80,4 +95,12 @@ onMounted(cargar)
   color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.5px;
 }
 .lista { background: white; border-radius: var(--radius); margin: 0 16px; box-shadow: var(--shadow); overflow: hidden; }
+.fab {
+  position: fixed; bottom: 24px; right: 24px;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--primary); color: white;
+  font-size: 32px; border: none; cursor: pointer;
+  box-shadow: 0 4px 16px rgba(108,71,255,0.4);
+  display: flex; align-items: center; justify-content: center;
+}
 </style>
