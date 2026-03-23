@@ -10,4 +10,5 @@ export const api = {
   getResumen: () => request('/api/resumen'),
   getCliente: (nombre) => request(`/api/clientes/${encodeURIComponent(nombre)}`),
   getClientes: () => request('/api/clientes'),
+  getHistorial: () => request('/api/historial'),
 }

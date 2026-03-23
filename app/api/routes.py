@@ -5,6 +5,8 @@ from app.models.base import get_db
 from app.commands.registry import CommandRegistry
 from app.services.fiado_service import FiadoService
 from app.webhooks import mercadopago as mp_webhook
+from app.models.fiado import Fiado
+from app.models.pago import Pago
 
 router = APIRouter()
 command_registry = CommandRegistry()
@@ -63,6 +65,47 @@ def get_resumen(db: Session = Depends(get_db)):
 def get_clientes(db: Session = Depends(get_db)):
     service = FiadoService(db)
     return [{"id": c.id, "nombre": c.nombre, "telefono": c.telefono} for c in service.clientes.get_all()]
+
+
+@router.get("/api/historial")
+def get_historial(db: Session = Depends(get_db)):
+    fiados = db.query(Fiado).order_by(Fiado.created_at.desc()).all()
+    pagos = db.query(Pago).order_by(Pago.created_at.desc()).all()
+
+    movimientos = []
+    for f in fiados:
+        movimientos.append({
+            "tipo": "fiado",
+            "cliente": f.cliente.nombre,
+            "monto": f.monto_original,
+            "descripcion": f.descripcion,
+            "fecha": f.created_at.isoformat(),
+            "saldado": f.esta_saldado,
+        })
+    for p in pagos:
+        movimientos.append({
+            "tipo": "pago",
+            "cliente": p.fiado.cliente.nombre,
+            "monto": p.monto,
+            "metodo": p.metodo,
+            "fecha": p.created_at.isoformat(),
+            "saldado": None,
+        })
+
+    movimientos.sort(key=lambda x: x["fecha"], reverse=True)
+
+    total_fiado = sum(f.monto_original for f in fiados)
+    total_cobrado = sum(p.monto for p in pagos)
+    total_pendiente = sum(f.monto_pendiente for f in fiados if not f.esta_saldado)
+
+    return {
+        "movimientos": movimientos,
+        "stats": {
+            "total_fiado": total_fiado,
+            "total_cobrado": total_cobrado,
+            "total_pendiente": total_pendiente,
+        }
+    }
 
 
 @router.get("/api/clientes/{nombre}")
